@@ -311,6 +311,11 @@ void create_http_response() {
     );
 }
 
+static err_t http_sent_callback(void *arg, struct tcp_pcb *tpcb, u16_t len) {
+    tcp_close(tpcb);
+    return ERR_OK;
+}
+
 /**
  * @brief Função de callback HTTP para processamento de pacotes TCP recebidos.
  *
@@ -333,6 +338,8 @@ static err_t http_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_
         tcp_close(tpcb);
         return ERR_OK;
     }
+
+    tcp_recved(tpcb, p->len);  // Indica que o pacote foi recebido
 
     // Processa a requisição HTTP
     char *request = (char *)p->payload;
@@ -368,6 +375,7 @@ static err_t http_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_
 
     // Envia a resposta HTTP
     tcp_write(tpcb, http_response, strlen(http_response), TCP_WRITE_FLAG_COPY);
+    tcp_sent(tpcb, http_sent_callback);
 
     // Libera o buffer recebido
     pbuf_free(p);
