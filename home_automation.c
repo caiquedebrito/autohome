@@ -11,8 +11,8 @@
 #include "hardware/pio.h"
 #include "ws2812.pio.h"
 
-#define WIFI_SSID "Willian(gdv)18am"  // Substitua pelo nome da sua rede Wi-Fi
-#define WIFI_PASS "c4iqu3246" // Substitua pela senha da sua rede Wi-Fi
+#define WIFI_SSID ""  // Substitua pelo nome da sua rede Wi-Fi
+#define WIFI_PASS "" // Substitua pela senha da sua rede Wi-Fi
 
 #define I2C_PORT i2c1
 #define I2C_SDA 14
