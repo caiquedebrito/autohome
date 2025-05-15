@@ -24,6 +24,7 @@
 #define BUTTON_B_PIN 6 // Pino do botão B
 #define SERVO_PIN 8  // Definição do pino PWM para o servo
 #define DHT_PIN 9 // Pino do DHT11
+#define BUZZER_PIN 21
 
 #define PWM_FREQ 50   // Frequência de 50Hz (Período de 20ms)
 #define PWM_WRAP 20000 // Contagem total do PWM (20ms em microsegundos
@@ -83,6 +84,8 @@ void emit_alert();
 void setup_pwm(uint pin);
 void set_servo_position(uint pin, uint pulse_width);
 int read_dht11(DHT11 *sensor);
+void pwm_init_buzzer(uint pin);
+void play_tone(uint pin, uint frequency, uint duration_ms);
 
 #define LED_COUNT 25
 
@@ -101,6 +104,8 @@ int main()
     stdio_init_all();
     gpio_setup();
     i2c_setup();
+    pwm_init_buzzer(BUZZER_PIN);
+
     npInit(WS2812_PIN);
     npClear();
 
@@ -495,6 +500,16 @@ void gate(bool state) {
 
 void emit_alert() {
     printf("Alerta acionado\n");
+    play_tone(BUZZER_PIN, 392, 1000); // Toca um tom de alerta
+}
+
+void pwm_init_buzzer(uint pin) {
+    gpio_set_function(pin, GPIO_FUNC_PWM);
+    uint slice_num = pwm_gpio_to_slice_num(pin);
+    pwm_config config = pwm_get_default_config();
+    pwm_config_set_clkdiv(&config, 4.0f); // Ajusta divisor de clock
+    pwm_init(slice_num, &config, true);
+    pwm_set_gpio_level(pin, 0); // Desliga o PWM inicialmente
 }
 
 // Função para configurar o PWM
@@ -504,6 +519,21 @@ void setup_pwm(uint pin) {
     pwm_set_wrap(slice_num, PWM_WRAP); // Define o período do PWM para 20ms
     pwm_set_clkdiv(slice_num, 125.0f); // Configuração do divisor de clock para atingir 50Hz
     pwm_set_enabled(slice_num, true); // Habilita o PWM
+}
+
+// Toca uma nota com a frequência e duração especificadas
+void play_tone(uint pin, uint frequency, uint duration_ms) {
+    uint slice_num = pwm_gpio_to_slice_num(pin);
+    uint32_t clock_freq = clock_get_hz(clk_sys);
+    uint32_t top = clock_freq / frequency - 1;
+
+    pwm_set_wrap(slice_num, top);
+    pwm_set_gpio_level(pin, top / 2); // 50% de duty cycle
+
+    sleep_ms(duration_ms);
+
+    pwm_set_gpio_level(pin, 0); // Desliga o som após a duração
+    sleep_ms(50); // Pausa entre notas
 }
 
 // Função para definir o ciclo ativo (duty cycle) do servo em microssegundos
