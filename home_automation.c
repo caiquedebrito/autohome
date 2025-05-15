@@ -65,6 +65,8 @@ DHT11 dht11 = {0, 0};
 */
 char http_response[3072];
 
+bool read_sensor_dht11 = false; // Variável para controlar a leitura do sensor DHT11
+
 void gpio_setup();
 void i2c_setup();
 void show_ip_address();
@@ -86,6 +88,7 @@ void set_servo_position(uint pin, uint pulse_width);
 int read_dht11(DHT11 *sensor);
 void pwm_init_buzzer(uint pin);
 void play_tone(uint pin, uint frequency, uint duration_ms);
+bool repeating_timer_callback(struct repeating_timer *t);
 
 #define LED_COUNT 25
 
@@ -130,13 +133,27 @@ int main()
     }
 
     printf("Conectado.\n");
-    
+
+    struct repeating_timer timer;
+
+    gpio_init(DHT_PIN);
+    sleep_ms(2000); // Espera para o sensor DHT11 se estabilizar
+
     read_dht11(&dht11);  // Lê os dados do sensor DHT11
+    
+    add_repeating_timer_ms(5000, repeating_timer_callback, NULL, &timer); // Lê o DHT11 a cada 10 segundos
+
     show_ip_address();
 
     start_http_server();
     
     while (true) {
+        if (read_sensor_dht11) {
+            read_sensor_dht11 = false; // Reseta a variável
+            read_dht11(&dht11);  // Lê os dados do sensor DHT11
+            show_ip_address();
+        }
+
         cyw43_arch_poll();  // Necessário para manter o Wi-Fi ativo
         sleep_ms(100);
     }
@@ -547,8 +564,53 @@ void set_servo_position(uint pin, uint pulse_width) {
 
 // Função para ler os dados do sensor DHT11
 int read_dht11(DHT11 *sensor) {
-    // Simulação de leitura do DHT11
-    sensor->temperature = 25; // Temperatura simulada
-    sensor->humidity = 60; // Umidade simulada
-    return 0; // Retorna 0 para indicar sucesso
+    uint8_t data[5] = {0};
+
+    // Inicializa o pino como saída e envia o pulso de start
+    gpio_init(DHT_PIN);
+    gpio_set_dir(DHT_PIN, GPIO_OUT);
+    gpio_put(DHT_PIN, 0);
+    sleep_ms(20);  // Mantém por 20ms
+    gpio_put(DHT_PIN, 1);
+    sleep_us(40);  // Espera 40us
+
+    gpio_set_dir(DHT_PIN, GPIO_IN);
+
+    // Aguarda resposta do sensor (LOW por ~80us)
+    while (gpio_get(DHT_PIN) == 1);
+    while (gpio_get(DHT_PIN) == 0);
+    while (gpio_get(DHT_PIN) == 1);
+
+    // Lê os 40 bits
+    for (int i = 0; i < 40; i++) {
+        while (gpio_get(DHT_PIN) == 0); // Espera 50us de LOW
+
+        // Marca o tempo do pulso HIGH
+        uint32_t start_time = time_us_32();
+        while (gpio_get(DHT_PIN) == 1);
+        uint32_t pulse_duration = time_us_32() - start_time;
+
+        // Se o HIGH for maior que 40us, é 1, senão 0
+        data[i / 8] <<= 1;
+        if (pulse_duration > 40) {
+            data[i / 8] |= 1;
+        }
+    }
+
+    // Verifica checksum
+    uint8_t checksum = data[0] + data[1] + data[2] + data[3];
+    if (data[4] != checksum) return -1;
+
+    sensor->humidity = data[0];
+    sensor->temperature = data[2];
+
+    // Exibe os dados lidos
+    printf("Umidade: %d%%, Temperatura: %d°C\n", sensor->humidity, sensor->temperature);
+
+    return 0;
+}
+
+bool repeating_timer_callback(struct repeating_timer *t) {
+    read_sensor_dht11 = true; // Define a variável para ler o sensor DHT11
+    return true;
 }
