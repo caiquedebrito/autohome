@@ -105,6 +105,7 @@ int main()
     gpio_setup();
     i2c_setup();
     pwm_init_buzzer(BUZZER_PIN);
+    setup_pwm(SERVO_PIN);
 
     npInit(WS2812_PIN);
     npClear();
@@ -493,8 +494,10 @@ void gate(bool state) {
 
     if (state) {
         printf("Portão aberto\n");
+        set_servo_position(SERVO_PIN, 2400); // Abre o portão
     } else {
         printf("Portão fechado\n");
+        set_servo_position(SERVO_PIN, 500); // Fecha o portão
     }
 }
 
