@@ -11,18 +11,20 @@
 #include "hardware/pio.h"
 #include "ws2812.pio.h"
 
-#define WIFI_SSID "Willian(gdv)18am"  // Substitua pelo nome da sua rede Wi-Fi
-#define WIFI_PASS "c4iqu3246" // Substitua pela senha da sua rede Wi-Fi
+#define WIFI_SSID ""  // Substitua pelo nome da sua rede Wi-Fi
+#define WIFI_PASS "" // Substitua pela senha da sua rede Wi-Fi
 
 #define I2C_PORT i2c1
 #define I2C_SDA 14
 #define I2C_SCL 15 
 #define address 0x3C
 
-#define WS2812_PIN 7
-#define BUTTON_B_PIN 6
-
+// Pinos dos componentes
+#define WS2812_PIN 7 // Pino do WS2812
+#define BUTTON_B_PIN 6 // Pino do botão B
 #define SERVO_PIN 8  // Definição do pino PWM para o servo
+#define DHT_PIN 9 // Pino do DHT11
+
 #define PWM_FREQ 50   // Frequência de 50Hz (Período de 20ms)
 #define PWM_WRAP 20000 // Contagem total do PWM (20ms em microsegundos
 
@@ -94,12 +96,13 @@ PIO np_pio;
 uint sm;
 npLED_t leds[LED_COUNT];
 
-
 int main()
 {
     stdio_init_all();
     gpio_setup();
     i2c_setup();
+    npInit(WS2812_PIN);
+    npClear();
 
     ssd1306_init(&ssd, WIDTH, HEIGHT, false, address, I2C_PORT);
     ssd1306_config(&ssd);
@@ -126,8 +129,7 @@ int main()
     show_ip_address();
 
     start_http_server();
-
-
+    
     while (true) {
         cyw43_arch_poll();  // Necessário para manter o Wi-Fi ativo
         sleep_ms(100);
@@ -471,14 +473,14 @@ void npInit(uint pin) {
 
 void turn_on_light(bool *light, uint index) {
     *light = true;
-    // npSetLED(index, 255, 255, 255);
-    // npWrite();
+    npSetLED(index, 255, 255, 255);
+    npWrite();
 }
 
 void turn_off_light(bool *light, uint index) {
     *light = false;
-    // npSetLED(index, 0, 0, 0);
-    // npWrite();
+    npSetLED(index, 0, 0, 0);
+    npWrite();
 }
 
 void gate(bool state) {
