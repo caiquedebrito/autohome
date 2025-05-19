@@ -259,7 +259,6 @@ void create_http_response() {
         "<head>"
         "<meta charset=\"UTF-8\">"
         "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">"
-        "<meta http-equiv=\"refresh\" content=\"5\">"
         "<title>AutoHome | Automação residencial</title>"
         "<style>body{font-family:sans-serif;background-color:#f4f7f6;margin:0;padding:1rem;color:#555;min-height:100dvh;display:flex;justify-content:center;align-items:center}h2{text-align:center;color:#333}main{width: 100%%;max-width:400px;margin:0 auto;background-color:#fff;padding:1rem;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1);display:flex;flex-direction:column;gap:1.5rem}fieldset{border:2px solid #5a5d7c;border-radius:8px;padding:1rem}legend{padding:0 0.5rem;font-weight:bold;color:#000}label{font-weight:bold;margin-right:0.5rem}input[type=\"radio\"]{margin-right:0.5rem}input[type=\"button\"]{background-color:#cf0606;color:#fff;border:none;padding:0.5rem 1rem;border-radius:5px;cursor:pointer}fieldset>div{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center}.on_status{color:#12db55}.on_status input[type=\"radio\"]{accent-color:#12db55}.off_status{color:#db1212}.off_status input[type=\"radio\"]{accent-color:#db1212}.clima{background-color:#e0f7fa}.clima p{margin:0;line-height:1.5;display:flex;justify-content:space-between}input[type=\"button\"]{text-transform: capitalize}</style>"
         "</head>"
